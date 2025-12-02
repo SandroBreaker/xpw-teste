@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ]
   };
 
-  // --- 2. CLASSE CAROUSEL (Lógica Visual) ---
+  // --- 2. CLASSE CAROUSEL (Lógica Visual Otimizada) ---
   class CarouselComponent {
     constructor(wrapperId, mediaList) {
       this.wrapper = document.getElementById(wrapperId);
@@ -28,7 +28,8 @@ document.addEventListener("DOMContentLoaded", () => {
       this.currentIndex = 0;
       this.timer = null;
       this.isPlaying = true;
-      this.slidesRef = [];
+      this.totalSlides = this.mediaList.length;
+      this.slideElements = new Map(); // Armazena apenas os slides ativos
 
       this.els = {
         container: this.wrapper.querySelector('.slides'),
@@ -43,22 +44,35 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     init() {
-      this.buildSlides();
+      this.buildIndicators();
+      this.goToSlide(0, true); // true para inicialização
       this.bindEvents();
       this.startTimer();
     }
+    
+    buildIndicators() {
+        this.els.indicators.innerHTML = '';
+        this.mediaList.forEach((_, index) => {
+            const dot = document.createElement('div');
+            dot.className = `dot ${index === 0 ? 'active' : ''}`;
+            dot.addEventListener('click', () => this.goToSlide(index));
+            this.els.indicators.appendChild(dot);
+        });
+    }
 
-    buildSlides() {
-      this.els.container.innerHTML = '';
-      this.els.indicators.innerHTML = '';
+    createSlide(index) {
+        if (this.slideElements.has(index)) {
+            return this.slideElements.get(index);
+        }
 
-      this.mediaList.forEach((file, index) => {
+        const file = this.mediaList[index];
         const src = file.startsWith('http') ? file : `${CONFIG.assetsPath}${file}`;
         const isVideo = file.toLowerCase().endsWith('.mp4');
         
         const slideEl = document.createElement('div');
         slideEl.className = 'slide';
-        
+        slideEl.dataset.index = index;
+
         if (isVideo) {
           slideEl.innerHTML = `
             <video class="carousel-media" muted loop playsinline preload="metadata">
@@ -68,49 +82,67 @@ document.addEventListener("DOMContentLoaded", () => {
           slideEl.innerHTML = `<img src="${src}" class="carousel-media" loading="lazy" decoding="async" alt="Slide ${index}">`;
         }
         
+        slideEl.style.transform = `translateX(${index * 100}%)`;
         this.els.container.appendChild(slideEl);
-
-        const dot = document.createElement('div');
-        dot.className = `dot ${index === 0 ? 'active' : ''}`;
-        dot.addEventListener('click', () => this.goToSlide(index));
-        this.els.indicators.appendChild(dot);
-
-        this.slidesRef.push({ 
-          src, 
-          type: isVideo ? 'video' : 'image',
-          videoEl: isVideo ? slideEl.querySelector('video') : null
-        });
-      });
-      
-      this.handleVideoPlayback();
+        
+        const slideData = {
+            el: slideEl,
+            src,
+            type: isVideo ? 'video' : 'image',
+            videoEl: isVideo ? slideEl.querySelector('video') : null
+        };
+        
+        this.slideElements.set(index, slideData);
+        return slideData;
     }
 
-    goToSlide(index) {
-      const total = this.slidesRef.length;
-      this.currentIndex = ((index % total) + total) % total;
-
+    goToSlide(index, isInit = false) {
+      this.currentIndex = ((index % this.totalSlides) + this.totalSlides) % this.totalSlides;
+      
+      this.els.container.style.transition = isInit ? 'none' : 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
       this.els.container.style.transform = `translateX(-${this.currentIndex * 100}%)`;
 
-      Array.from(this.els.indicators.children).forEach((dot, i) => {
-        dot.classList.toggle('active', i === this.currentIndex);
-      });
-
+      this.updateActiveSlides();
+      this.updateIndicators();
       this.handleVideoPlayback();
       this.resetTimer();
     }
+    
+    updateActiveSlides() {
+        const prevIndex = ((this.currentIndex - 1 + this.totalSlides) % this.totalSlides);
+        const nextIndex = ((this.currentIndex + 1) % this.totalSlides);
+        const activeIndexes = new Set([this.currentIndex, prevIndex, nextIndex]);
+
+        // Criar slides necessários
+        activeIndexes.forEach(idx => this.createSlide(idx));
+        
+        // Remover slides desnecessários
+        for (const [index, slideData] of this.slideElements.entries()) {
+            if (!activeIndexes.has(index)) {
+                slideData.el.remove();
+                this.slideElements.delete(index);
+            }
+        }
+    }
+
+    updateIndicators() {
+        Array.from(this.els.indicators.children).forEach((dot, i) => {
+            dot.classList.toggle('active', i === this.currentIndex);
+        });
+    }
 
     handleVideoPlayback() {
-      this.slidesRef.forEach((s, i) => {
-        if (s.videoEl) {
-          if (i === this.currentIndex) {
-            const playPromise = s.videoEl.play();
-            if (playPromise !== undefined) playPromise.catch(() => {});
-          } else {
-            s.videoEl.pause();
-            s.videoEl.currentTime = 0;
-          }
+        for (const [index, slideData] of this.slideElements.entries()) {
+            if (slideData.videoEl) {
+                if (index === this.currentIndex) {
+                    const playPromise = slideData.videoEl.play();
+                    if (playPromise !== undefined) playPromise.catch(() => {});
+                } else {
+                    slideData.videoEl.pause();
+                    slideData.videoEl.currentTime = 0;
+                }
+            }
         }
-      });
     }
 
     next() { this.goToSlide(this.currentIndex + 1); }
@@ -131,8 +163,10 @@ document.addEventListener("DOMContentLoaded", () => {
       this.els.btnPrev.addEventListener('click', () => this.prev());
 
       this.els.btnPreview.addEventListener('click', () => {
-        const currentItem = this.slidesRef[this.currentIndex];
-        window.App.openLightbox(currentItem.src, currentItem.type);
+        const currentItem = this.mediaList[this.currentIndex];
+        const src = currentItem.startsWith('http') ? currentItem : `${CONFIG.assetsPath}${currentItem}`;
+        const type = currentItem.toLowerCase().endsWith('.mp4') ? 'video' : 'image';
+        window.App.openLightbox(src, type);
         this.pause();
       });
 
@@ -148,8 +182,8 @@ document.addEventListener("DOMContentLoaded", () => {
     pause() {
         this.isPlaying = false;
         clearInterval(this.timer);
-        const current = this.slidesRef[this.currentIndex];
-        if(current && current.videoEl) current.videoEl.pause();
+        const currentSlideData = this.slideElements.get(this.currentIndex);
+        if(currentSlideData && currentSlideData.videoEl) currentSlideData.videoEl.pause();
     }
     
     resume() {
@@ -163,6 +197,7 @@ document.addEventListener("DOMContentLoaded", () => {
   window.App = {
     CONFIG: CONFIG,
     carousels: [],
+    isGalleryGridBuilt: false,
     
     init() {
       // Inicializa Carrosséis
@@ -216,28 +251,36 @@ document.addEventListener("DOMContentLoaded", () => {
       window.App.carousels.forEach(c => c.resume());
     },
 
-    // --- Módulo Galeria (Grade Bloqueada) ---
+    // --- Módulo Galeria (Grade Bloqueada Otimizada) ---
+    buildLockedGrid() {
+        if (this.isGalleryGridBuilt) return;
+
+        const grid = document.getElementById('lockedGrid');
+        if (!grid) return;
+
+        const fragment = document.createDocumentFragment();
+        const colors = ['#1a1a1a', '#222', '#2a2a2a', '#111', '#1f1f1f'];
+        
+        for (let i = 0; i < 100; i++) {
+            const div = document.createElement('div');
+            div.className = 'blur-item';
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            div.style.background = color;
+            div.style.backgroundImage = `linear-gradient(45deg, ${color}, rgba(139, 92, 246, 0.1))`;
+            fragment.appendChild(div);
+        }
+        grid.appendChild(fragment);
+        this.isGalleryGridBuilt = true;
+    },
+
     setupGallery() {
       const btns = document.querySelectorAll('.see-more-btn');
       const modal = document.getElementById('galleryModal');
-      const grid = document.getElementById('lockedGrid');
       const closeBtn = document.getElementById('closeGallery');
-
-      const fragment = document.createDocumentFragment();
-      const colors = ['#1a1a1a', '#222', '#2a2a2a', '#111', '#1f1f1f'];
-      
-      for (let i = 0; i < 100; i++) {
-        const div = document.createElement('div');
-        div.className = 'blur-item';
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        div.style.background = color;
-        div.style.backgroundImage = `linear-gradient(45deg, ${color}, rgba(139, 92, 246, 0.1))`;
-        fragment.appendChild(div);
-      }
-      grid.appendChild(fragment);
 
       btns.forEach(btn => {
         btn.addEventListener('click', () => {
+          this.buildLockedGrid(); // Cria a grade apenas quando necessário
           modal.setAttribute('aria-hidden', 'false');
         });
       });

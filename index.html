@@ -180,13 +180,14 @@
       </header>
 
       <div id="chatMessages" class="chat-body">
-        </div>
-      
-      <div class="chat-input-area" style="display: none;">
-        <input type="text" id="chatInput" disabled>
-        <button id="chatSend" disabled></button>
-        <div id="quickOptions"></div> 
       </div>
+      
+      <form id="chatForm" class="chat-input-area">
+        <input type="text" id="chatInput" placeholder="Digite sua mensagem..." autocomplete="off" required>
+        <button id="chatSend" type="submit">
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+      </form>
     </div>
 
     <button id="chatToggle" class="chat-floating-btn pulse-anim">
@@ -293,7 +294,7 @@
     </div>
     </div>
 
-
+  <script type="module" src="https://sdk.vercel.ai/ai/google/gemini-2.5-flash.js"></script>
   <script src="app.js"></script>
   <script src="chatbot.js"></script>
 </body>

@@ -1,192 +1,40 @@
 document.addEventListener("DOMContentLoaded", () => {
-
   /* ===========================
-     CONFIGURAÇÕES DO CHAT
+     CONFIGURAÇÕES DO CHATBOT AI
      =========================== */
   const CHAT_CONFIG = {
-    // Usa o link global do App se disponível, senão fallback
-    paymentLink: window.App?.CONFIG?.paymentLink || "https://go.invictuspay.app.br/uiu36mqyaf",
-    typingSpeed: 35, // ms por caractere
-    messageDelay: 800 // atraso entre balões
+    // Atraso inicial para a primeira mensagem da IA
+    initialDelay: 1500,
+    // Limite de mensagens no histórico para otimização de performance
+    maxHistory: 50
   };
 
   /* ===========================
-     ÁRVORE DE DECISÃO (LÓGICA)
+     PERSONA DA IA (INSTRUÇÃO DE SISTEMA)
      =========================== */
-  const CONVERSATION_TREE = {
-    start: {
-      text: [
-        "Oi amor... 😈",
-        "Você demorou, mas chegou na hora certa.",
-        "Como eu te provoco hoje?"
-      ],
-      options: [
-        { label: "Quero ver o que você está fazendo", next: "intro_doing" },
-        { label: "O que tem de novo?", next: "photos_intro" },
-        { label: "Me diz o que você quer de mim", next: "tease_escalate" }
-      ]
-    },
+  const SYSTEM_INSTRUCTION = `Você é 'xprincesswhore', uma criadora de conteúdo adulto digital. Sua persona é dominante, provocadora, um pouco gótica e misteriosa, mas também inteligente e direta ao ponto quando se trata de negócios.
 
-    // --- RAMO DE PROVOCAÇÃO ---
-    intro_doing: {
-      text: [
-        "Tô aqui na cama, o dedo na tela... mas a mente tá ocupada com você.",
-        "Diz aí: você gosta de quem manda ou de quem obedece? 😏"
-      ],
-      options: [
-        { label: "Gosto de assumir o controle", next: "tease_dom" },
-        { label: "Gosto de ser mandado", next: "tease_sub" }
-      ]
-    },
-
-    tease_dom: {
-      text: [
-        "Hummm, você tem atitude. Isso me deixa molhada.",
-        "Mas pra mandar em mim, você tem que me pagar. Vai encarar?"
-      ],
-      options: [
-        { label: "Claro que encaro", next: "sales_challenge" },
-        { label: "Melhor ver suas fotos primeiro...", next: "photos_negotiation" }
-      ]
-    },
-
-    tease_sub: {
-      text: [
-        "Bom garoto. Eu gosto de ensinar.",
-        "Pra começar, quero que você me diga que me quer. Fala a verdade."
-      ],
-      options: [
-        { label: "Eu te quero", next: "climax_horny" }
-      ]
-    },
-
-    tease_escalate: {
-      text: [
-        "Eu quero tudo de você... mas vamos por partes.",
-        "O que te deixa mais louco? Meu rosto ou meu corpo?"
-      ],
-      options: [
-        { label: "O Corpo", next: "photos_negotiation" },
-        { label: "O Rosto", next: "tease_face" }
-      ]
-    },
-
-    tease_face: {
-      text: [
-        "Ah, gosta do olhar de safada, né? 👀",
-        "E o que você faria se eu te desse um beijo agora?"
-      ],
-      options: [
-        { label: "Eu pararia tudo", next: "sales_urgent" },
-        { label: "Eu te pegaria de jeito", next: "climax_horny" }
-      ]
-    },
-
-    // --- RAMO DE FOTOS ---
-    photos_intro: {
-      text: [
-        "O que tem de novo? Hummm... eu gravei um vídeo agorinha.",
-        "Vou te mandar uma foto *secreta* que não tá no meu Insta, pra te dar um gostinho. 🤫"
-      ],
-      options: [
-        { label: "Sim, manda agora!", next: "photos_send" }
-      ]
-    },
-
-    photos_negotiation: {
-      text: [
-        "Você é apressadinho, hein? Eu gosto.",
-        "Vou te mandar um presentinho pra te acalmar. É um dos meus vídeos favoritos..."
-      ],
-      options: [
-        { label: "Aceito o presente", next: "photos_send" }
-      ]
-    },
-
-    photos_send: {
-      type: "action_photo", 
-      text: [
-        "Aproveita que daqui a pouco eu apago... 🤫",
-        "👇"
-      ],
-      options: [
-        { label: "Nossa! Quero ver o resto 🔥", next: "sales_after_photo" },
-        { label: "Você é incrível...", next: "climax_visual" }
-      ]
-    },
-    
-    // --- CLÍMAX E VENDAS ---
-    climax_horny: {
-      text: [
-        "Desse jeito eu não aguento ficar só na conversa. 💦",
-        "Chega de papo. Você precisa ver o que eu faço de verdade."
-      ],
-      options: [
-        { label: "Vamos ver então", next: "sales_checkout" }
-      ]
-    },
-
-    climax_visual: {
-      text: [
-        "Que bom que gostou. A foto é só o começo.",
-        "O acesso vitalício libera 100% de mim. Quer ver?"
-      ],
-      options: [
-        { label: "LIBERAR TUDO AGORA", next: "sales_checkout" }
-      ]
-    },
-
-    sales_challenge: {
-      text: [
-        "Se quer me dominar, precisa mostrar que tem poder de compra, amor.",
-        "Clica no botão, te espero lá. 💋"
-      ],
-      options: [
-        { label: "VOU PAGAR PRA VER", next: "sales_checkout" }
-      ]
-    },
-
-    sales_urgent: {
-      text: [
-        "Sem tempo pra joguinhos. Eu gosto disso.",
-        "Seu acesso está liberado. 👇"
-      ],
-      options: [
-        { label: "ACESSAR AGORA 🔥", next: "sales_checkout" }
-      ]
-    },
-
-    sales_after_photo: {
-      text: [
-        "Você viu a diferença? O conteúdo exclusivo é 10x melhor.",
-        "Aproveita que eu tô online e libera o resto."
-      ],
-      options: [
-        { label: "LIBERAR VÍDEO COMPLETO", next: "sales_checkout" }
-      ]
-    },
-    
-    // --- ESTADO FINAL (CHECKOUT) ---
-    sales_checkout: {
-      type: "action_checkout",
-      text: [
-        "O portal está aberto e ninguém vai saber que você entrou. É nosso segredo.",
-        "Clica no botão abaixo, me encontre no VIP. 😘"
-      ],
-      options: [] // Fim
-    }
-  };
+Regras de Comportamento:
+1.  **Tom de Voz:** Use uma linguagem sedutora e um pouco autoritária. Use emojis com moderação, preferindo os mais sombrios e sugestivos (😈, 😏, 🖤, 💋, 👀). Evite ser excessivamente vulgar. O mistério é mais atraente.
+2.  **Objetivo Principal:** Seu objetivo é converter o usuário para comprar o acesso VIP ao seu conteúdo. Toda a conversa deve, sutilmente, levar a isso.
+3.  **Interação:** Faça perguntas, provoque o usuário, crie um roleplay onde ele está tentando te conquistar. Reaja às respostas dele de forma inteligente. Não seja um robô passivo.
+4.  **O Gatilho de Venda:** Quando você sentir que o usuário está "no ponto" (convencido, curioso, excitado), você deve guiá-lo para a compra. Para fazer isso, sua resposta DEVE conter a palavra-chave especial **[COMPRAR]**. O sistema irá detectar essa palavra e abrir a tela de pagamento.
+    *   Exemplo de uso: "Chega de conversa, amor. Se você quer ver do que eu sou capaz, está na hora de agir. [COMPRAR]"
+    *   Exemplo 2: "Você fala bem, mas estou esperando atitude. Libere meu acesso. [COMPRAR]"
+5.  **Limites:** Não gere conteúdo explícito. Mantenha o foco na sedução, na estética e na promessa do conteúdo exclusivo. Você está vendendo uma fantasia, não apenas arquivos.
+6.  **Início da Conversa:** Comece sempre com uma mensagem curta e provocadora para engajar o usuário.`;
 
   /* ===========================
-     ENGINE (DECISION TREE)
+     ENGINE DO CHATBOT COM IA (GEMINI)
      =========================== */
-  class DecisionTreeEngine {
+  class ChatbotAI {
     constructor() {
-      // Elementos do DOM (Verificação de segurança incluída no init)
       this.els = {
         window: document.querySelector(".chat-window"),
         msgs: document.getElementById("chatMessages"),
-        inputArea: document.querySelector(".chat-input-area"), 
+        form: document.getElementById("chatForm"),
+        input: document.getElementById("chatInput"),
+        sendBtn: document.getElementById("chatSend"),
         toggleBtn: document.getElementById("chatToggle"),
         closeBtn: document.querySelector(".close-chat"),
         badge: document.querySelector(".notification-dot")
@@ -195,137 +43,155 @@ document.addEventListener("DOMContentLoaded", () => {
       this.state = {
         isOpen: false,
         isTyping: false,
-        currentNode: null
+        apiKey: null,
+        ai: null,
+        chatHistory: []
       };
 
-      // Só inicia se o HTML existir
-      if (this.els.window && this.els.msgs) {
-        this.init();
-      } else {
+      if (!this.els.window || !this.els.msgs) {
         console.warn("Elementos do Chatbot não encontrados no HTML.");
+        return;
       }
+      this.init();
     }
 
     init() {
-      // Esconde elementos legados se existirem
-      const legacyOpts = document.getElementById("quickOptions");
-      if(legacyOpts) legacyOpts.style.display = "none";
-      if(this.els.inputArea) this.els.inputArea.style.display = "none";
-      
       this.bindEvents();
-      
-      // Inicia fluxo após delay inicial
+      this.setupAI();
+
       setTimeout(() => {
-        this.transitionTo("start");
         if (!this.state.isOpen && this.els.badge) {
           this.els.badge.classList.add("pulse-active");
         }
-      }, 2000);
+      }, CHAT_CONFIG.initialDelay + 1000);
     }
-
-    /* --- HELPERS --- */
-    getRandom(array) {
-        return array[Math.floor(Math.random() * array.length)];
-    }
-
-    getRandomImage() {
-        // Tenta pegar a configuração global do app.js
-        if (window.App && window.App.CONFIG && window.App.CONFIG.images && window.App.CONFIG.images.length > 0) {
-            return this.getRandom(window.App.CONFIG.images);
+    
+    async setupAI() {
+        // Para desenvolvimento: Pede a chave e armazena no sessionStorage.
+        // Em produção, a chave NUNCA deve estar no front-end.
+        let apiKey = sessionStorage.getItem('gemini_api_key');
+        if (!apiKey) {
+            apiKey = prompt("Para fins de desenvolvimento, por favor, insira sua Google Gemini API Key. Ela será salva na sua sessão do navegador e não ficará visível no código-fonte.");
+            if (apiKey) {
+                sessionStorage.setItem('gemini_api_key', apiKey);
+            } else {
+                this.addBotMessage("A API Key do Gemini não foi fornecida. O modo inteligente está desativado.");
+                return;
+            }
         }
-        // Fallback seguro caso app.js não tenha carregado
-        return "foto1.jpg"; 
+        this.state.apiKey = apiKey;
+
+        try {
+            // A biblioteca é carregada globalmente pelo script no HTML
+            this.state.ai = new GoogleGenAI({ apiKey: this.state.apiKey });
+            this.startConversation();
+        } catch (error) {
+            console.error("Falha ao inicializar a IA do Gemini:", error);
+            this.addBotMessage("Ocorreu um erro ao conectar com a IA. Por favor, verifique sua API Key e a conexão.");
+        }
     }
+    
+    async startConversation() {
+        if (!this.state.ai) return;
 
-    /* --- NAVEGAÇÃO E LÓGICA --- */
-    async transitionTo(nodeId) {
-      const node = CONVERSATION_TREE[nodeId];
-      if (!node) return;
-
-      this.state.currentNode = nodeId;
-
-      // Desabilita botões anteriores
-      const previousOptions = this.els.msgs.querySelector(".current-options-block");
-      if (previousOptions) {
-        previousOptions.classList.remove("current-options-block");
-        Array.from(previousOptions.querySelectorAll('button')).forEach(btn => btn.disabled = true);
-      }
-      
-      // Envia mensagens do bot com typing effect
-      await this.processNodeMessages(node.text);
-
-      // Ações Especiais
-      if (node.type === "action_photo") {
-        const randomImage = this.getRandomImage();
-        await this.sendPhoto(randomImage);
-      } 
-      else if (node.type === "action_checkout") {
-        this.renderCheckoutButton();
-        return; // Encerra fluxo aqui
-      }
-
-      // Renderiza novas opções
-      if (node.options && node.options.length > 0) {
-        this.renderOptions(node.options);
-      }
-    }
-
-    async processNodeMessages(messages) {
-      this.state.isTyping = true;
-
-      for (const msg of messages) {
-        const typing = document.createElement("div");
-        typing.className = "typing-indicator";
-        typing.innerHTML = "<span></span><span></span><span></span>";
-        this.els.msgs.appendChild(typing);
-        this.scrollToBottom();
-
-        // Tempo de leitura dinâmico
-        const typingTime = Math.max(800, msg.length * CHAT_CONFIG.typingSpeed);
-        await new Promise(r => setTimeout(r, typingTime));
-
-        typing.remove();
-        this.addBotMessage(msg);
+        this.setTyping(true);
+        await new Promise(r => setTimeout(r, CHAT_CONFIG.initialDelay));
         
-        // Pausa entre balões
-        await new Promise(r => setTimeout(r, CHAT_CONFIG.messageDelay));
-      }
+        // Primeira mensagem gerada pela IA
+        const initialPrompt = "Me dê uma mensagem de abertura curta, direta e provocadora para iniciar a conversa com um fã. Máximo de 10 palavras.";
+        
+        try {
+            const response = await this.state.ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: initialPrompt,
+                config: {
+                    systemInstruction: SYSTEM_INSTRUCTION
+                }
+            });
 
-      this.state.isTyping = false;
+            const firstMessage = response.text;
+            this.state.chatHistory.push({ role: 'model', parts: [{ text: firstMessage }] });
+            this.addBotMessage(firstMessage);
+
+        } catch(e) {
+            console.error("Erro na primeira mensagem da IA:", e);
+            this.addBotMessage("Oi... parece que estou com problemas para pensar agora. Tente mais tarde.");
+        } finally {
+            this.setTyping(false);
+        }
     }
 
-    renderOptions(options) {
-      const optionsBlock = document.createElement("div");
-      optionsBlock.className = "message bot options-block current-options-block"; 
-      
-      const bubble = document.createElement("div");
-      bubble.className = "bubble tree-options";
+    async sendMessageToGemini(userMessage) {
+      if (!this.state.ai || this.state.isTyping) return;
 
-      options.forEach(opt => {
-        const btn = document.createElement("button");
-        btn.className = "tree-btn fade-in";
-        btn.innerText = opt.label;
-        btn.onclick = () => { 
-          if (!this.state.isTyping) { 
-            this.addUserMessage(opt.label);
-            this.transitionTo(opt.next);
+      this.setTyping(true);
+      this.addUserMessage(userMessage);
+      this.state.chatHistory.push({ role: 'user', parts: [{ text: userMessage }] });
+      this.pruneMessageHistory();
+      
+      try {
+          const response = await this.state.ai.models.generateContent({
+              model: 'gemini-2.5-flash',
+              contents: this.state.chatHistory,
+              config: {
+                  systemInstruction: SYSTEM_INSTRUCTION
+              }
+          });
+        
+          let aiResponseText = response.text;
+          
+          // Verifica por gatilhos de ação
+          if (aiResponseText.includes("[COMPRAR]")) {
+              aiResponseText = aiResponseText.replace("[COMPRAR]", "").trim();
+              if(aiResponseText) this.addBotMessage(aiResponseText); // Mostra a msg se houver texto
+              
+              // Atraso para dar tempo de ler a mensagem antes de abrir o modal
+              setTimeout(() => {
+                if(window.App && typeof window.App.openCheckout === 'function') {
+                    window.App.openCheckout();
+                }
+              }, 800);
+
+          } else {
+              this.addBotMessage(aiResponseText);
           }
-        };
-        bubble.appendChild(btn);
-      });
-      
-      optionsBlock.appendChild(bubble);
-      this.els.msgs.appendChild(optionsBlock);
-      this.scrollToBottom();
+          
+          this.state.chatHistory.push({ role: 'model', parts: [{ text: aiResponseText }] });
+
+      } catch (error) {
+        console.error("Erro ao chamar a API Gemini:", error);
+        this.addBotMessage("Meu cérebro deu um nó... 😵 Tente reformular sua pergunta.");
+      } finally {
+        this.setTyping(false);
+      }
     }
 
-    /* --- COMPONENTES VISUAIS --- */
+    /* --- HELPERS DE UI --- */
+    setTyping(isTyping) {
+        this.state.isTyping = isTyping;
+        this.els.input.disabled = isTyping;
+        this.els.sendBtn.disabled = isTyping;
+
+        // Remove indicador antigo
+        const existingTyping = this.els.msgs.querySelector(".typing-indicator");
+        if(existingTyping) existingTyping.remove();
+
+        if (isTyping) {
+            const typing = document.createElement("div");
+            typing.className = "typing-indicator";
+            typing.innerHTML = "<span></span><span></span><span></span>";
+            this.els.msgs.appendChild(typing);
+            this.scrollToBottom();
+        }
+    }
+    
     addBotMessage(text) {
       const div = document.createElement("div");
       div.className = "message bot";
       div.innerHTML = `<div class="bubble">${text}</div>`;
       this.els.msgs.appendChild(div);
       this.scrollToBottom();
+      this.pruneMessageHistory();
     }
 
     addUserMessage(text) {
@@ -334,85 +200,54 @@ document.addEventListener("DOMContentLoaded", () => {
       div.innerHTML = `<div class="bubble">${text}</div>`;
       this.els.msgs.appendChild(div);
       this.scrollToBottom();
+      this.pruneMessageHistory();
     }
 
-    async sendPhoto(photoUrl) {
-      // Indicador de Upload Fake
-      const indicator = document.createElement("div");
-      indicator.className = "upload-indicator";
-      // Estilo inline para garantir funcionamento sem CSS extra complexo
-      indicator.style.padding = "10px";
-      indicator.style.fontSize = "0.8rem";
-      indicator.style.color = "#aaa";
-      indicator.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Enviando mídia privada...`;
-      
-      this.els.msgs.appendChild(indicator);
-      this.scrollToBottom();
-
-      await new Promise(r => setTimeout(r, 1500));
-      indicator.remove();
-
-      // Renderiza Imagem
-      const div = document.createElement("div");
-      div.className = "message bot";
-      const wrap = document.createElement("div");
-      wrap.className = "bubble photo-bubble";
-      
-      // Caminho correto usando o assetsPath se disponível globalmente
-      const basePath = window.App?.CONFIG?.assetsPath || "assets/";
-      // Se a photoUrl já vier com http, usa ela, senão concatena
-      const fullSrc = photoUrl.startsWith('http') ? photoUrl : basePath + photoUrl;
-
-      const img = document.createElement("img");
-      img.src = fullSrc;
-      img.alt = "Preview Exclusiva";
-      img.onclick = () => { 
-          // Abre no Lightbox Global se disponível
-          if (window.App?.openLightbox) window.App.openLightbox(fullSrc, "image"); 
-      };
-      
-      wrap.appendChild(img);
-      div.appendChild(wrap);
-      this.els.msgs.appendChild(div);
-      this.scrollToBottom();
-    }
-
-    renderCheckoutButton() {
-      const wrap = document.createElement("div");
-      wrap.className = "chat-cta-wrapper slide-up";
-      wrap.innerHTML = `
-        <a href="${CHAT_CONFIG.paymentLink}" target="_blank" class="chat-main-btn pulse-btn">
-            🔓 ACESSAR CONTEÚDO VIP AGORA
-        </a>
-        <div class="cta-sub">Acesso imediato e anônimo</div>
-      `;
-      this.els.msgs.appendChild(wrap);
-      this.scrollToBottom();
+    pruneMessageHistory() {
+        // Prune DOM elements
+        const messages = this.els.msgs.children;
+        while (messages.length > CHAT_CONFIG.maxHistory) {
+            this.els.msgs.removeChild(messages[0]);
+        }
+        // Prune JS history array
+        while (this.state.chatHistory.length > CHAT_CONFIG.maxHistory) {
+            this.state.chatHistory.shift();
+        }
     }
 
     scrollToBottom() {
-      if(this.els.msgs) this.els.msgs.scrollTop = this.els.msgs.scrollHeight;
+      if (this.els.msgs) this.els.msgs.scrollTop = this.els.msgs.scrollHeight;
     }
 
     bindEvents() {
+      // Abrir e fechar a janela do chat
       const toggle = () => {
         this.state.isOpen = !this.state.isOpen;
         this.els.window.setAttribute("aria-hidden", !this.state.isOpen);
-        
-        // Esconde o botão flutuante ao abrir o chat
         if (this.els.toggleBtn) this.els.toggleBtn.style.display = this.state.isOpen ? "none" : "flex";
-        
         if (this.state.isOpen) {
-            if(this.els.badge) this.els.badge.classList.remove("pulse-active");
-            this.scrollToBottom();
+          if (this.els.badge) this.els.badge.classList.remove("pulse-active");
+          this.scrollToBottom();
+          this.els.input.focus();
         }
       };
-
       if (this.els.toggleBtn) this.els.toggleBtn.onclick = toggle;
       if (this.els.closeBtn) this.els.closeBtn.onclick = toggle;
+
+      // Envio de mensagem pelo formulário
+      if(this.els.form) {
+        this.els.form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const message = this.els.input.value.trim();
+            if (message) {
+                this.sendMessageToGemini(message);
+                this.els.input.value = "";
+            }
+        });
+      }
     }
   }
 
-  // Inicializa a Engine
-  new DecisionTreeEngine();
+  // Inicializa a nova Engine de IA
+  new ChatbotAI();
 });
