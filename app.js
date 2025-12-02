@@ -254,21 +254,47 @@ document.addEventListener("DOMContentLoaded", () => {
     // --- Módulo Galeria (Grade Bloqueada Otimizada) ---
     buildLockedGrid() {
         if (this.isGalleryGridBuilt) return;
-
         const grid = document.getElementById('lockedGrid');
         if (!grid) return;
 
-        const fragment = document.createDocumentFragment();
-        const colors = ['#1a1a1a', '#222', '#2a2a2a', '#111', '#1f1f1f'];
-        
-        for (let i = 0; i < 100; i++) {
-            const div = document.createElement('div');
-            div.className = 'blur-item';
-            const color = colors[Math.floor(Math.random() * colors.length)];
-            div.style.background = color;
-            div.style.backgroundImage = `linear-gradient(45deg, ${color}, rgba(139, 92, 246, 0.1))`;
-            fragment.appendChild(div);
+        // 1. Combinar, embaralhar e limitar a mídia
+        let allMedia = [...CONFIG.images, ...CONFIG.gifs];
+        for (let i = allMedia.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [allMedia[i], allMedia[j]] = [allMedia[j], allMedia[i]];
         }
+        const mediaForGrid = allMedia.slice(0, 100);
+
+        const fragment = document.createDocumentFragment();
+        const videoColors = ['#1a1a1a', '#222', '#2a2a2a', '#111', '#1f1f1f'];
+
+        mediaForGrid.forEach(file => {
+            const item = document.createElement('div');
+            item.className = 'blur-item';
+            
+            const isVideo = file.toLowerCase().endsWith('.mp4');
+            
+            if (isVideo) {
+                item.classList.add('blur-item--video');
+                const color = videoColors[Math.floor(Math.random() * videoColors.length)];
+                item.style.background = color;
+            } else {
+                const src = file.startsWith('http') ? file : `${CONFIG.assetsPath}${file}`;
+                item.style.backgroundImage = `url('${src}')`;
+            }
+            fragment.appendChild(item);
+        });
+
+        // Preencher espaços restantes se houver menos de 100 arquivos de mídia
+        const remaining = 100 - mediaForGrid.length;
+        for (let i = 0; i < remaining; i++) {
+            const item = document.createElement('div');
+            item.className = 'blur-item';
+            const color = videoColors[Math.floor(Math.random() * videoColors.length)];
+            item.style.background = color;
+            fragment.appendChild(item);
+        }
+
         grid.appendChild(fragment);
         this.isGalleryGridBuilt = true;
     },
@@ -345,7 +371,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
                         const data = await res.json();
                         if (!data.erro) {
-                            document.getElementById('inputRua').value = data.logradouro;
+                            document.getElementById('inputRua').value = data.logouro;
                             document.getElementById('inputBairro').value = data.bairro;
                             document.getElementById('inputCidade').value = data.localidade;
                             document.getElementById('inputUf').value = data.uf;

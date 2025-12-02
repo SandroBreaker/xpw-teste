@@ -394,15 +394,75 @@ footer {
 .gallery-header h3 { color: var(--accent-primary); margin-bottom: 5px; }
 .gallery-header p { color: var(--text-muted); font-size: 0.9rem; }
 .locked-grid-container { position: relative; overflow: hidden; border-radius: var(--radius-md); height: 400px; }
-.grid-10x10 { display: grid; grid-template-columns: repeat(10, 1fr); gap: 2px; opacity: 0.5; }
-.blur-item { aspect-ratio: 1/1; background-color: #222; filter: blur(4px); }
+.grid-10x10 { display: grid; grid-template-columns: repeat(10, 1fr); gap: 2px; }
+
+/* Estilos da Galeria Gamificada */
+.blur-item {
+  aspect-ratio: 1/1;
+  background-size: cover;
+  background-position: center;
+  filter: blur(5px) saturate(0.8);
+  position: relative;
+  overflow: hidden;
+  border-radius: 4px;
+  transition: var(--transition-fast);
+  cursor: pointer;
+}
+.blur-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.2);
+  transition: var(--transition-fast);
+}
+.blur-item::after {
+  content: '\f023'; /* Ícone de cadeado do FontAwesome */
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.5rem;
+  opacity: 0.5;
+  transition: var(--transition-fast);
+  text-shadow: 0 0 5px #000;
+}
+.blur-item--video::after {
+  content: '\f144'; /* Ícone de play do FontAwesome */
+  font-size: 2rem;
+  opacity: 0.7;
+}
+.locked-grid-container:hover .blur-item {
+  filter: blur(8px) saturate(0.5); /* Aumenta o blur nos itens não focados */
+}
+.locked-grid-container .blur-item:hover {
+  filter: blur(2px) saturate(1); /* "Revela" um pouco o item focado */
+  transform: scale(1.1);
+  z-index: 2;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+.locked-grid-container .blur-item:hover::before {
+  background: rgba(0, 0, 0, 0); /* Remove o overlay escuro */
+}
+.locked-grid-container .blur-item:hover::after {
+  opacity: 0; /* Esconde o ícone */
+  transform: translate(-50%, -50%) scale(0.8);
+}
+
+
 .paywall-overlay {
   position: absolute; inset: 0;
   background: linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.9));
   z-index: 10; display: flex; flex-direction: column;
   align-items: center; justify-content: center; text-align: center;
   backdrop-filter: blur(3px);
+  pointer-events: none; /* Permite o hover nos itens abaixo */
 }
+.paywall-overlay > * {
+  pointer-events: all; /* Reativa eventos para os elementos do overlay */
+}
+
 .lock-icon {
   font-size: 3rem; color: var(--accent-secondary); margin-bottom: 15px;
   filter: drop-shadow(0 0 10px rgba(236,72,153,0.5));
@@ -485,16 +545,35 @@ footer {
 .message.bot .bubble { background: rgba(255,255,255,0.08); color: #eee; border-bottom-left-radius: 4px; }
 .message.user .bubble { background: var(--accent-primary); color: #fff; border-bottom-right-radius: 4px; }
 
-.options-block .bubble { background: transparent !important; padding: 0 !important; display: flex; flex-direction: column; gap: 8px; width: 100%; }
-.tree-btn {
-  background: rgba(139, 92, 246, 0.15);
-  border: 1px solid var(--accent-primary);
-  color: #fff; padding: 10px; border-radius: var(--radius-md);
-  cursor: pointer; text-align: left; font-size: 0.85rem;
-  transition: var(--transition-fast);
+.chat-input-area {
+    display: flex;
+    padding: 10px 15px;
+    border-top: 1px solid var(--glass-border);
+    background: rgba(0,0,0,0.2);
 }
-.tree-btn:hover:not(:disabled) { background: var(--accent-primary); transform: translateX(5px); }
-.tree-btn:disabled { opacity: 0.4; cursor: not-allowed; border-color: var(--glass-border); background: rgba(255,255,255,0.05);}
+#chatInput {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #fff;
+    padding: 10px;
+    font-size: 0.9rem;
+    outline: none;
+}
+#chatInput::placeholder { color: #777; }
+#chatSend {
+    background: var(--accent-primary);
+    border: none;
+    color: #fff;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+#chatSend:hover { background: var(--accent-secondary); }
+#chatSend:disabled { background: #555; cursor: not-allowed; }
 
 .typing-indicator {
   padding: 12px; display: flex; gap: 5px; align-items: center;
@@ -505,20 +584,6 @@ footer {
 .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
 .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
 @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
-
-.photo-bubble img { max-width: 200px; border-radius: var(--radius-md); cursor: pointer; border: 2px solid var(--accent-secondary); transition: var(--transition-fast); }
-.photo-bubble img:hover { transform: scale(1.05); }
-
-.chat-cta-wrapper { text-align: center; margin-top: 10px; animation: fadeInUp 0.5s ease; padding: 10px; }
-.chat-main-btn {
-  background: linear-gradient(90deg, #ec4899, #8b5cf6);
-  color: #fff; text-decoration: none; padding: 14px 24px;
-  border-radius: 99px; font-weight: bold; font-size: 0.9rem;
-  display: inline-block; box-shadow: 0 4px 20px rgba(236, 72, 153, 0.4);
-  transition: var(--transition-fast);
-}
-.chat-main-btn:hover { transform: scale(1.05); }
-.cta-sub { font-size: 0.7rem; color: #aaa; margin-top: 8px; }
 
 /* ==========================================================================
    7. CHECKOUT & PIX MODAL

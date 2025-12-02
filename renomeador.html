@@ -136,16 +136,8 @@
         imgList.push(`    "${newName}"`);
       });
       jsConfig += imgList.join(",\n");
-      jsConfig += "\n  ],\n\n";
+      jsConfig += "\n  ]\n};";
 
-      // 3. PLACEHOLDERS (Pega 1 gif e 1 foto para o fundo da galeria bloqueada)
-      // Se não tiver arquivos, usa genéricos
-      const p1 = gifList.length > 0 ? gifList[0].trim().replace(/"/g, '') : '1.mp4';
-      const p2 = imgList.length > 0 ? imgList[0].trim().replace(/"/g, '') : 'foto1.jpg';
-      
-      jsConfig += `  // Itens usados para preencher o fundo borrado
-  gridPlaceholders: ["${p1}", "${p2}"]
-};`;
 
       // EXIBIR
       document.getElementById('output').style.display = 'block';
